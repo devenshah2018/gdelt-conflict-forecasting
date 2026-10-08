@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+
+# Bulk data (re-create with: python cli.py download). A small sample ships in data/sample/.
+data/raw/
+data/processed/
+
+# Model binaries are re-created with: python cli.py train
+artifacts/models/
+
+# Spark noise
+metastore_db/
+derby.log
+spark-warehouse/
+
+# OS
+.DS_Store
+.claude/launch.json

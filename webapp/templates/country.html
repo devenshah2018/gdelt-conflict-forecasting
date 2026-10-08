@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}{{ name }} | GDELT Conflict Forecasting{% endblock %}
+{% block content %}
+<div class="controls" style="margin-top: 26px;">
+  <h1 style="margin: 0; flex: 1;">{{ name }} <span class="mono" style="color: var(--muted); font-size: 15px;">{{ code }}</span></h1>
+  <select id="country-picker" aria-label="Switch country">
+    {% for c in countries %}
+    <option value="{{ c.code }}" {{ "selected" if c.code == code }}>{{ c.name }}</option>
+    {% endfor %}
+  </select>
+</div>
+<p class="subtitle">Weekly event aggregates from GDELT 2.0 and model predictions on the held-out test period.</p>
+
+{% if risk %}
+<div class="tiles">
+  <div class="tile">
+    <div class="label">Material conflict events (latest week)</div>
+    <div class="value">{{ risk["quad4_material_conflict"] | int }}</div>
+    <div class="hint">8-week baseline {{ "%.1f" | format(risk["quad4_mean8"]) }}</div>
+  </div>
+  <div class="tile">
+    <div class="label">Current status</div>
+    <div class="value">{{ "Spiking" if risk["is_spike"] == 1 else "Baseline" }}</div>
+    <div class="hint">{{ "%.1f" | format(risk["quad4_spike_ratio"]) }}x trailing average</div>
+  </div>
+  {% for lead in risk_leads %}
+  <div class="tile">
+    <div class="label">P(spike) +{{ lead }} week{{ "s" if lead > 1 }}</div>
+    <div class="value">{{ "%.2f" | format(risk["prob_lead" ~ lead]) }}</div>
+    <div class="hint">week of {{ risk["target_week_lead" ~ lead] }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Conflict events per week</h2>
+  <div class="legend">
+    <span class="item"><span class="swatch" style="background: var(--series-1)"></span>Material conflict (quad 4)</span>
+    <span class="item"><span class="swatch" style="background: var(--series-3)"></span>Verbal conflict (quad 3)</span>
+    <span class="item"><span class="swatch" style="background: var(--series-2)"></span>Spike week</span>
+  </div>
+  <div id="history-chart"></div>
+  <p class="note">Counts are from a uniform sample of the GDELT firehose, so levels are
+    proportional to (not equal to) total global coverage. Spike weeks are at least
+    2x the trailing 8-week average and at least 8 events.</p>
+</div>
+
+<div class="card">
+  <div class="controls">
+    <h2 style="margin: 0; flex: 1;">Model predictions on the test period</h2>
+    <div class="seg" id="pred-lead">
+      {% for lead in pred_leads %}
+      <button data-lead="{{ lead }}" class="{{ 'active' if loop.first }}">+{{ lead }}w</button>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="legend">
+    <span class="item"><span class="swatch" style="background: var(--series-1)"></span>P(spike at selected lead)</span>
+    <span class="item"><span class="swatch" style="background: var(--series-2)"></span>Actual spike (at target week)</span>
+  </div>
+  <div id="pred-chart"></div>
+  <p class="note" id="pred-note">Each point is the probability, issued in that week, that a spike
+    occurs the selected number of weeks later. Markers show weeks whose target week actually spiked.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const SERIES = {{ series | tojson }};
+  const PREDS = {{ preds | tojson }};
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+  document.getElementById("country-picker").addEventListener("change", (ev) => {
+    window.location.href = "/country/" + ev.target.value;
+  });
+
+  const spikes = [];
+  SERIES.is_spike.forEach((s, i) => {
+    if (s === 1) spikes.push({ index: i, value: SERIES.quad4[i], color: css("--series-2"), label: "spike week" });
+  });
+  Charts.lineChart(document.getElementById("history-chart"), {
+    labels: SERIES.weeks,
+    series: [
+      { name: "Material conflict", values: SERIES.quad4, color: css("--series-1") },
+      { name: "Verbal conflict", values: SERIES.quad3, color: css("--series-3") },
+    ],
+    markers: spikes,
+    height: 260,
+  });
+
+  function drawPred(lead) {
+    const p = PREDS[String(lead)];
+    const container = document.getElementById("pred-chart");
+    if (!p) {
+      container.innerHTML = '<p class="note">No test-period predictions for this country and lead time. Train the model first.</p>';
+      return;
+    }
+    const markers = [];
+    p.label.forEach((l, i) => {
+      if (l === 1) markers.push({ index: i, value: p.prob[i], color: css("--series-2"), label: "target week spiked" });
+    });
+    Charts.lineChart(container, {
+      labels: p.weeks,
+      series: [{ name: "P(spike)", values: p.prob, color: css("--series-1") }],
+      markers,
+      yMax: 1,
+      yFmt: (v) => (+v).toFixed(2),
+      height: 220,
+    });
+  }
+  drawPred({{ pred_leads[0] }});
+  document.querySelectorAll("#pred-lead button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#pred-lead button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      drawPred(btn.dataset.lead);
+    });
+  });
+</script>
+{% endblock %}

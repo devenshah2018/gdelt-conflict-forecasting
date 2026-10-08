@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Countries | GDELT Conflict Forecasting{% endblock %}
+{% block content %}
+<h1>Tracked countries</h1>
+<p class="subtitle">Every country above the news-volume floor. Click one for weekly history
+  and model predictions.</p>
+
+{% if countries %}
+<div class="card">
+  <div class="controls">
+    <input type="search" id="filter" placeholder="Filter countries..." aria-label="Filter countries">
+  </div>
+  <div id="country-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px;">
+    {% for c in countries %}
+    <a href="/country/{{ c.code }}" data-name="{{ (c.name ~ ' ' ~ c.code) | lower }}"
+       style="padding: 6px 10px; border-radius: 6px;">
+      {{ c.name }} <span class="mono" style="color: var(--muted); font-size: 12px;">{{ c.code }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="empty">
+  <p><b>No processed data yet.</b> Run <code>python cli.py features</code> first.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const filter = document.getElementById("filter");
+  if (filter) {
+    filter.addEventListener("input", () => {
+      const q = filter.value.toLowerCase();
+      document.querySelectorAll("#country-list a").forEach((a) => {
+        a.style.display = a.dataset.name.includes(q) ? "" : "none";
+      });
+    });
+  }
+</script>
+{% endblock %}

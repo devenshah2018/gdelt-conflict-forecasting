@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}Model &amp; Evaluation | GDELT Conflict Forecasting{% endblock %}
+{% block content %}
+<h1>Model and evaluation</h1>
+<p class="subtitle">Gradient-Boosted Trees vs a logistic regression baseline and a persistence
+  rule, on a chronological train/test split with a lead-sized gap between them.</p>
+
+{% if metrics %}
+{% set lead1 = metrics["leads"][leads[0] | string] %}
+<div class="tiles">
+  <div class="tile">
+    <div class="label">Split cutoff week</div>
+    <div class="value">{{ lead1["cutoff_week"] }}</div>
+    <div class="hint">train before, test after</div>
+  </div>
+  <div class="tile">
+    <div class="label">Training rows (lead 1)</div>
+    <div class="value">{{ "{:,}".format(lead1["n_train"]) }}</div>
+    <div class="hint">{{ "%.1f" | format(lead1["prevalence_train"] * 100) }}% positive</div>
+  </div>
+  <div class="tile">
+    <div class="label">Test rows (lead 1)</div>
+    <div class="value">{{ "{:,}".format(lead1["n_test"]) }}</div>
+    <div class="hint">{{ "%.1f" | format(lead1["prevalence_test"] * 100) }}% positive</div>
+  </div>
+  <div class="tile">
+    <div class="label">Features</div>
+    <div class="value">{{ metrics["config"]["feature_count"] }}</div>
+    <div class="hint">per country-week</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h2>PR-AUC by lead time</h2>
+    <div class="legend">
+      <span class="item"><span class="swatch" style="background: var(--series-1)"></span>Gradient-Boosted Trees</span>
+      <span class="item"><span class="swatch" style="background: var(--series-2)"></span>Logistic regression</span>
+    </div>
+    <div id="prauc-chart"></div>
+    <p class="note">Area under the precision-recall curve on the held-out test weeks.
+      Higher is better; the test-set positive rate is the floor a random model would score.</p>
+  </div>
+  <div class="card">
+    <h2>Recall at {{ "%.0f" | format(target_far * 100) }}% false alarm rate</h2>
+    <div class="legend">
+      <span class="item"><span class="swatch" style="background: var(--series-1)"></span>Gradient-Boosted Trees</span>
+      <span class="item"><span class="swatch" style="background: var(--series-2)"></span>Logistic regression</span>
+    </div>
+    <div id="far-chart"></div>
+    <p class="note">Share of true spikes caught when the alert threshold is set so only
+      {{ "%.0f" | format(target_far * 100) }}% of quiet country-weeks trigger a false alarm.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Full comparison</h2>
+  <div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Lead</th><th>Model</th>
+        <th class="num">PR-AUC</th><th class="num">ROC-AUC</th>
+        <th class="num">Precision</th><th class="num">Recall</th><th class="num">F1</th>
+        <th class="num">Recall @ {{ "%.0f" | format(target_far * 100) }}% FAR</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for lead in leads %}
+      {% set L = metrics["leads"][lead | string] %}
+      {% for key, label in [("gbt", "Gradient-Boosted Trees"), ("logreg", "Logistic regression"), ("persistence", "Persistence rule")] %}
+      {% set m = L["models"][key] %}
+      <tr>
+        <td>{% if loop.first %}+{{ lead }}w{% endif %}</td>
+        <td>{{ label }}</td>
+        <td class="num">{{ "%.3f" | format(m["pr_auc"]) if m["pr_auc"] is defined else "n/a" }}</td>
+        <td class="num">{{ "%.3f" | format(m["roc_auc"]) if m["roc_auc"] is defined else "n/a" }}</td>
+        <td class="num">{{ "%.3f" | format(m["precision"]) }}</td>
+        <td class="num">{{ "%.3f" | format(m["recall"]) }}</td>
+        <td class="num">{{ "%.3f" | format(m["f1"]) }}</td>
+        <td class="num">{{ "%.3f" | format(m["recall_at_far"]) if m["recall_at_far"] is defined else "n/a" }}</td>
+      </tr>
+      {% endfor %}
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">Precision, recall, and F1 use an operating threshold chosen on the training
+    set only. The persistence rule alerts when the current week is already spiking; it has no
+    probability output, so the AUC columns do not apply.</p>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h2>Calibration</h2>
+    <div class="controls">
+      <div class="seg" id="cal-lead">
+        {% for lead in leads %}
+        <button data-lead="{{ lead }}" class="{{ 'active' if loop.first }}">+{{ lead }}w</button>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="legend">
+      <span class="item"><span class="swatch" style="background: var(--series-1)"></span>Observed spike rate</span>
+      <span class="item"><span class="swatch" style="background: var(--muted)"></span>Perfect calibration</span>
+    </div>
+    <div id="cal-chart"></div>
+    <p class="note">Test predictions grouped into quantile bins: mean predicted probability
+      against the spike rate actually observed in that bin.</p>
+  </div>
+  <div class="card">
+    <h2>What drives the GBT model (lead 1)</h2>
+    <div id="imp-chart"></div>
+    <p class="note">Spark MLlib impurity-based feature importances, top 12.</p>
+  </div>
+</div>
+{% else %}
+<div class="empty">
+  <p><b>No trained model yet.</b> Run <code>python cli.py train</code>
+     or use the pipeline buttons on the dashboard.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if metrics %}
+<script>
+  const METRICS = {{ metrics | tojson }};
+  const LEADS = {{ leads | tojson }};
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const fmt3 = (v) => (+v).toFixed(v >= 1 || v === 0 ? 0 : 2);
+
+  const cats = LEADS.map((l) => "+" + l + "w");
+  const pick = (model, key) => LEADS.map((l) => METRICS.leads[String(l)].models[model][key]);
+
+  Charts.groupedBarChart(document.getElementById("prauc-chart"), {
+    categories: cats,
+    series: [
+      { name: "GBT", values: pick("gbt", "pr_auc"), color: css("--series-1") },
+      { name: "Logistic regression", values: pick("logreg", "pr_auc"), color: css("--series-2") },
+    ],
+    yMax: 1, yFmt: fmt3, height: 220,
+  });
+
+  Charts.groupedBarChart(document.getElementById("far-chart"), {
+    categories: cats,
+    series: [
+      { name: "GBT", values: pick("gbt", "recall_at_far"), color: css("--series-1") },
+      { name: "Logistic regression", values: pick("logreg", "recall_at_far"), color: css("--series-2") },
+    ],
+    yMax: 1, yFmt: fmt3, height: 220,
+  });
+
+  function drawCalibration(lead) {
+    const bins = METRICS.leads[String(lead)].models.gbt.calibration;
+    const labels = bins.map((b) => (+b.mean_predicted).toFixed(2));
+    Charts.lineChart(document.getElementById("cal-chart"), {
+      labels,
+      series: [
+        { name: "Observed rate", values: bins.map((b) => b.observed_rate), color: css("--series-1") },
+        { name: "Perfect", values: bins.map((b) => b.mean_predicted), color: css("--muted") },
+      ],
+      yMax: Math.max(0.5, ...bins.map((b) => Math.max(b.observed_rate, b.mean_predicted))),
+      yFmt: (v) => (+v).toFixed(2), height: 220,
+    });
+  }
+  drawCalibration(LEADS[0]);
+  document.querySelectorAll("#cal-lead button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#cal-lead button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      drawCalibration(btn.dataset.lead);
+    });
+  });
+
+  const imp = METRICS.leads[String(LEADS[0])].models.gbt.feature_importances;
+  const items = Object.entries(imp)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12)
+    .map(([label, value]) => ({ label, value }));
+  Charts.hBarChart(document.getElementById("imp-chart"), {
+    items, color: css("--series-1"), vFmt: (v) => (+v).toFixed(3),
+  });
+</script>
+{% endif %}
+{% endblock %}

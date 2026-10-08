@@ -1,0 +1,789 @@
+{
+  "generated_at": "2026-07-22T15:23:49",
+  "config": {
+    "spike_ratio": 2.0,
+    "spike_min_count": 8,
+    "baseline_weeks": 8,
+    "train_fraction": 0.75,
+    "target_far": 0.1,
+    "feature_count": 42,
+    "gbt_params": {
+      "maxIter": 80,
+      "maxDepth": 4,
+      "stepSize": 0.1,
+      "subsamplingRate": 0.8,
+      "featureSubsetStrategy": "sqrt",
+      "minInstancesPerNode": 10
+    },
+    "lr_params": {
+      "maxIter": 100,
+      "regParam": 0.01,
+      "elasticNetParam": 0.0
+    }
+  },
+  "leads": {
+    "1": {
+      "cutoff_week": "2025-11-24",
+      "n_train": 11328,
+      "n_test": 3894,
+      "prevalence_train": 0.088,
+      "prevalence_test": 0.0896,
+      "models": {
+        "gbt": {
+          "pr_auc": 0.172,
+          "roc_auc": 0.6997,
+          "threshold": 0.1834,
+          "precision": 0.1971,
+          "recall": 0.3123,
+          "f1": 0.2417,
+          "tp": 109,
+          "fp": 444,
+          "fn": 240,
+          "recall_at_far": 0.2493,
+          "realized_far": 0.1001,
+          "calibration": [
+            {
+              "mean_predicted": 0.0197,
+              "observed_rate": 0.0103,
+              "count": 390
+            },
+            {
+              "mean_predicted": 0.0291,
+              "observed_rate": 0.0308,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.0434,
+              "observed_rate": 0.0386,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.056,
+              "observed_rate": 0.0744,
+              "count": 390
+            },
+            {
+              "mean_predicted": 0.0688,
+              "observed_rate": 0.0643,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.0859,
+              "observed_rate": 0.0746,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.1095,
+              "observed_rate": 0.1026,
+              "count": 390
+            },
+            {
+              "mean_predicted": 0.1347,
+              "observed_rate": 0.1414,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.1662,
+              "observed_rate": 0.1594,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.2684,
+              "observed_rate": 0.2,
+              "count": 390
+            }
+          ],
+          "feature_importances": {
+            "quad4_mean8": 0.0761,
+            "quad4_lag3": 0.0605,
+            "quad3_mean8": 0.0463,
+            "quad4_lag4": 0.045,
+            "quad4_std8": 0.0373,
+            "events_lag1": 0.0362,
+            "quad4_lag2": 0.035,
+            "tone_avg": 0.0321,
+            "quad4_spike_ratio": 0.0314,
+            "tone_lag1": 0.0296,
+            "coop_share": 0.0293,
+            "quad4_zscore": 0.0287,
+            "quad4_lag1": 0.0285,
+            "quad3_lag2": 0.0279,
+            "quad3_verbal_conflict": 0.0257,
+            "cnt_threaten": 0.0251,
+            "quad4_trend4": 0.0248,
+            "log_events_total": 0.0247,
+            "goldstein_avg": 0.0232,
+            "quad2_material_coop": 0.0221,
+            "goldstein_lag1": 0.0216,
+            "cnt_coerce": 0.0205,
+            "quad3_lag1": 0.0203,
+            "cnt_demand": 0.0203,
+            "quad3_trend4": 0.0196,
+            "quad3_share": 0.0182,
+            "cnt_disapprove": 0.0179,
+            "quad4_material_conflict": 0.0174,
+            "events_total": 0.0173,
+            "articles_sum": 0.0159,
+            "protest_lag1": 0.0141,
+            "quad4_share": 0.0131,
+            "quad1_verbal_coop": 0.013,
+            "cnt_assault": 0.0127,
+            "cnt_reduce_relations": 0.0126,
+            "cnt_reject": 0.0123,
+            "sources_sum": 0.0114,
+            "cnt_fight": 0.0104,
+            "mentions_sum": 0.0095,
+            "cnt_protest": 0.0079,
+            "cnt_force_posture": 0.0037,
+            "cnt_mass_violence": 0.0012
+          }
+        },
+        "logreg": {
+          "pr_auc": 0.1916,
+          "roc_auc": 0.6926,
+          "threshold": 0.1363,
+          "precision": 0.146,
+          "recall": 0.4928,
+          "f1": 0.2253,
+          "tp": 172,
+          "fp": 1006,
+          "fn": 177,
+          "recall_at_far": 0.235,
+          "realized_far": 0.1001,
+          "calibration": [
+            {
+              "mean_predicted": 0.0132,
+              "observed_rate": 0.0154,
+              "count": 390
+            },
+            {
+              "mean_predicted": 0.0525,
+              "observed_rate": 0.0154,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.0711,
+              "observed_rate": 0.036,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.0827,
+              "observed_rate": 0.0744,
+              "count": 390
+            },
+            {
+              "mean_predicted": 0.0925,
+              "observed_rate": 0.0848,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.1003,
+              "observed_rate": 0.072,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.1088,
+              "observed_rate": 0.1615,
+              "count": 390
+            },
+            {
+              "mean_predicted": 0.1184,
+              "observed_rate": 0.1054,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.1306,
+              "observed_rate": 0.1285,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.1808,
+              "observed_rate": 0.2026,
+              "count": 390
+            }
+          ]
+        },
+        "persistence": {
+          "precision": 0.177,
+          "recall": 0.1805,
+          "f1": 0.1787,
+          "tp": 63,
+          "fp": 293,
+          "fn": 286
+        }
+      }
+    },
+    "2": {
+      "cutoff_week": "2025-11-17",
+      "n_train": 11092,
+      "n_test": 3894,
+      "prevalence_train": 0.0865,
+      "prevalence_test": 0.0896,
+      "models": {
+        "gbt": {
+          "pr_auc": 0.1436,
+          "roc_auc": 0.6662,
+          "threshold": 0.1783,
+          "precision": 0.1606,
+          "recall": 0.2636,
+          "f1": 0.1996,
+          "tp": 92,
+          "fp": 481,
+          "fn": 257,
+          "recall_at_far": 0.2034,
+          "realized_far": 0.1001,
+          "calibration": [
+            {
+              "mean_predicted": 0.0205,
+              "observed_rate": 0.0231,
+              "count": 390
+            },
+            {
+              "mean_predicted": 0.0327,
+              "observed_rate": 0.0231,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.0453,
+              "observed_rate": 0.0617,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.0568,
+              "observed_rate": 0.0487,
+              "count": 390
+            },
+            {
+              "mean_predicted": 0.0728,
+              "observed_rate": 0.0925,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.0918,
+              "observed_rate": 0.0977,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.1125,
+              "observed_rate": 0.1128,
+              "count": 390
+            },
+            {
+              "mean_predicted": 0.135,
+              "observed_rate": 0.126,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.1633,
+              "observed_rate": 0.1362,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.2259,
+              "observed_rate": 0.1744,
+              "count": 390
+            }
+          ],
+          "feature_importances": {
+            "quad4_mean8": 0.071,
+            "quad4_lag3": 0.0605,
+            "quad4_lag2": 0.049,
+            "quad3_mean8": 0.0482,
+            "quad4_lag1": 0.0346,
+            "quad4_lag4": 0.0325,
+            "quad4_zscore": 0.0323,
+            "events_lag1": 0.0322,
+            "quad4_material_conflict": 0.0319,
+            "quad3_lag2": 0.0315,
+            "tone_avg": 0.0297,
+            "tone_lag1": 0.0293,
+            "quad4_std8": 0.029,
+            "quad2_material_coop": 0.0287,
+            "quad3_verbal_conflict": 0.0276,
+            "quad3_lag1": 0.0251,
+            "cnt_assault": 0.0246,
+            "goldstein_avg": 0.0236,
+            "quad4_share": 0.023,
+            "sources_sum": 0.0229,
+            "quad3_trend4": 0.0226,
+            "cnt_fight": 0.0222,
+            "cnt_coerce": 0.0216,
+            "quad3_share": 0.0216,
+            "quad4_spike_ratio": 0.0182,
+            "quad1_verbal_coop": 0.0179,
+            "goldstein_lag1": 0.0177,
+            "events_total": 0.0174,
+            "cnt_threaten": 0.0165,
+            "mentions_sum": 0.0159,
+            "cnt_protest": 0.0146,
+            "quad4_trend4": 0.0146,
+            "cnt_reject": 0.0135,
+            "cnt_disapprove": 0.013,
+            "articles_sum": 0.0128,
+            "coop_share": 0.0123,
+            "protest_lag1": 0.011,
+            "log_events_total": 0.0084,
+            "cnt_reduce_relations": 0.0072,
+            "cnt_force_posture": 0.0065,
+            "cnt_demand": 0.0051,
+            "cnt_mass_violence": 0.0023
+          }
+        },
+        "logreg": {
+          "pr_auc": 0.1333,
+          "roc_auc": 0.6477,
+          "threshold": 0.1383,
+          "precision": 0.1262,
+          "recall": 0.6905,
+          "f1": 0.2134,
+          "tp": 241,
+          "fp": 1669,
+          "fn": 108,
+          "recall_at_far": 0.1777,
+          "realized_far": 0.1001,
+          "calibration": [
+            {
+              "mean_predicted": 0.0122,
+              "observed_rate": 0.0256,
+              "count": 390
+            },
+            {
+              "mean_predicted": 0.0497,
+              "observed_rate": 0.0206,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.0679,
+              "observed_rate": 0.0437,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.0804,
+              "observed_rate": 0.0872,
+              "count": 390
+            },
+            {
+              "mean_predicted": 0.0913,
+              "observed_rate": 0.0925,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.101,
+              "observed_rate": 0.1157,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.1105,
+              "observed_rate": 0.1051,
+              "count": 390
+            },
+            {
+              "mean_predicted": 0.1204,
+              "observed_rate": 0.126,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.1323,
+              "observed_rate": 0.1285,
+              "count": 389
+            },
+            {
+              "mean_predicted": 0.1608,
+              "observed_rate": 0.1513,
+              "count": 390
+            }
+          ]
+        },
+        "persistence": {
+          "precision": 0.1339,
+          "recall": 0.1347,
+          "f1": 0.1343,
+          "tp": 47,
+          "fp": 304,
+          "fn": 302
+        }
+      }
+    },
+    "3": {
+      "cutoff_week": "2025-11-17",
+      "n_train": 10974,
+      "n_test": 3776,
+      "prevalence_train": 0.086,
+      "prevalence_test": 0.0898,
+      "models": {
+        "gbt": {
+          "pr_auc": 0.1441,
+          "roc_auc": 0.6653,
+          "threshold": 0.1782,
+          "precision": 0.1537,
+          "recall": 0.2035,
+          "f1": 0.1751,
+          "tp": 69,
+          "fp": 380,
+          "fn": 270,
+          "recall_at_far": 0.1829,
+          "realized_far": 0.1001,
+          "calibration": [
+            {
+              "mean_predicted": 0.0204,
+              "observed_rate": 0.0185,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.0314,
+              "observed_rate": 0.0451,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.0469,
+              "observed_rate": 0.0291,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.0584,
+              "observed_rate": 0.0743,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.0735,
+              "observed_rate": 0.082,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.0919,
+              "observed_rate": 0.0926,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.1117,
+              "observed_rate": 0.1273,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.1343,
+              "observed_rate": 0.1194,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.1632,
+              "observed_rate": 0.1508,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.226,
+              "observed_rate": 0.1587,
+              "count": 378
+            }
+          ],
+          "feature_importances": {
+            "quad4_lag2": 0.0559,
+            "quad4_mean8": 0.0533,
+            "quad3_mean8": 0.048,
+            "quad4_lag1": 0.0457,
+            "quad4_lag3": 0.0428,
+            "events_lag1": 0.0416,
+            "quad4_lag4": 0.0412,
+            "quad4_material_conflict": 0.0315,
+            "goldstein_lag1": 0.0301,
+            "quad4_std8": 0.0301,
+            "quad3_trend4": 0.0296,
+            "quad4_share": 0.0286,
+            "mentions_sum": 0.0277,
+            "cnt_fight": 0.027,
+            "tone_avg": 0.0264,
+            "quad3_share": 0.0251,
+            "quad3_lag1": 0.0251,
+            "tone_lag1": 0.0246,
+            "quad4_spike_ratio": 0.0233,
+            "events_total": 0.0226,
+            "quad2_material_coop": 0.0217,
+            "goldstein_avg": 0.0216,
+            "cnt_disapprove": 0.0214,
+            "quad4_zscore": 0.0211,
+            "sources_sum": 0.021,
+            "quad3_lag2": 0.019,
+            "quad4_trend4": 0.018,
+            "articles_sum": 0.0179,
+            "coop_share": 0.0178,
+            "quad3_verbal_conflict": 0.0169,
+            "quad1_verbal_coop": 0.0167,
+            "cnt_reject": 0.0159,
+            "cnt_coerce": 0.0157,
+            "cnt_threaten": 0.0134,
+            "cnt_assault": 0.0134,
+            "log_events_total": 0.0115,
+            "cnt_protest": 0.0113,
+            "cnt_reduce_relations": 0.0109,
+            "cnt_demand": 0.0094,
+            "protest_lag1": 0.0035,
+            "cnt_force_posture": 0.0017
+          }
+        },
+        "logreg": {
+          "pr_auc": 0.1432,
+          "roc_auc": 0.6541,
+          "threshold": 0.1373,
+          "precision": 0.135,
+          "recall": 0.587,
+          "f1": 0.2195,
+          "tp": 199,
+          "fp": 1275,
+          "fn": 140,
+          "recall_at_far": 0.1976,
+          "realized_far": 0.1001,
+          "calibration": [
+            {
+              "mean_predicted": 0.0109,
+              "observed_rate": 0.0185,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.0469,
+              "observed_rate": 0.0318,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.0652,
+              "observed_rate": 0.0503,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.0777,
+              "observed_rate": 0.0716,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.0885,
+              "observed_rate": 0.0873,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.0979,
+              "observed_rate": 0.1008,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.1071,
+              "observed_rate": 0.127,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.1174,
+              "observed_rate": 0.122,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.1303,
+              "observed_rate": 0.1296,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.1604,
+              "observed_rate": 0.1587,
+              "count": 378
+            }
+          ]
+        },
+        "persistence": {
+          "precision": 0.0875,
+          "recall": 0.0885,
+          "f1": 0.088,
+          "tp": 30,
+          "fp": 313,
+          "fn": 309
+        }
+      }
+    },
+    "4": {
+      "cutoff_week": "2025-11-10",
+      "n_train": 10738,
+      "n_test": 3776,
+      "prevalence_train": 0.0857,
+      "prevalence_test": 0.0898,
+      "models": {
+        "gbt": {
+          "pr_auc": 0.1312,
+          "roc_auc": 0.6581,
+          "threshold": 0.1774,
+          "precision": 0.1464,
+          "recall": 0.2625,
+          "f1": 0.188,
+          "tp": 89,
+          "fp": 519,
+          "fn": 250,
+          "recall_at_far": 0.1622,
+          "realized_far": 0.1001,
+          "calibration": [
+            {
+              "mean_predicted": 0.02,
+              "observed_rate": 0.0132,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.0307,
+              "observed_rate": 0.0345,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.0454,
+              "observed_rate": 0.0423,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.0583,
+              "observed_rate": 0.0796,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.0734,
+              "observed_rate": 0.0979,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.0919,
+              "observed_rate": 0.0847,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.1123,
+              "observed_rate": 0.1088,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.1341,
+              "observed_rate": 0.1406,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.1613,
+              "observed_rate": 0.164,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.2193,
+              "observed_rate": 0.1323,
+              "count": 378
+            }
+          ],
+          "feature_importances": {
+            "quad4_lag3": 0.0571,
+            "quad4_lag1": 0.0525,
+            "quad4_lag4": 0.0502,
+            "quad4_lag2": 0.0463,
+            "quad4_mean8": 0.0388,
+            "quad3_mean8": 0.0383,
+            "events_lag1": 0.0373,
+            "mentions_sum": 0.037,
+            "quad2_material_coop": 0.0347,
+            "quad4_material_conflict": 0.0323,
+            "sources_sum": 0.0318,
+            "quad3_share": 0.029,
+            "quad3_lag2": 0.0275,
+            "quad4_zscore": 0.0274,
+            "tone_lag1": 0.0265,
+            "quad4_std8": 0.0253,
+            "goldstein_avg": 0.0239,
+            "tone_avg": 0.0233,
+            "goldstein_lag1": 0.0232,
+            "quad3_verbal_conflict": 0.0232,
+            "log_events_total": 0.0229,
+            "coop_share": 0.0225,
+            "quad4_share": 0.0221,
+            "cnt_fight": 0.02,
+            "quad4_trend4": 0.0197,
+            "events_total": 0.0178,
+            "articles_sum": 0.0177,
+            "quad3_lag1": 0.0175,
+            "quad4_spike_ratio": 0.0163,
+            "cnt_reject": 0.0163,
+            "cnt_disapprove": 0.0158,
+            "cnt_coerce": 0.0144,
+            "quad3_trend4": 0.0136,
+            "cnt_protest": 0.0131,
+            "cnt_threaten": 0.013,
+            "quad1_verbal_coop": 0.013,
+            "cnt_demand": 0.0128,
+            "cnt_reduce_relations": 0.0087,
+            "protest_lag1": 0.0084,
+            "cnt_assault": 0.0047,
+            "cnt_force_posture": 0.0026,
+            "cnt_mass_violence": 0.0014
+          }
+        },
+        "logreg": {
+          "pr_auc": 0.1331,
+          "roc_auc": 0.653,
+          "threshold": 0.1417,
+          "precision": 0.1386,
+          "recall": 0.5811,
+          "f1": 0.2239,
+          "tp": 197,
+          "fp": 1224,
+          "fn": 142,
+          "recall_at_far": 0.1593,
+          "realized_far": 0.1001,
+          "calibration": [
+            {
+              "mean_predicted": 0.0106,
+              "observed_rate": 0.0185,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.045,
+              "observed_rate": 0.0318,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.0631,
+              "observed_rate": 0.045,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.0759,
+              "observed_rate": 0.0663,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.0878,
+              "observed_rate": 0.0979,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.0978,
+              "observed_rate": 0.0979,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.1078,
+              "observed_rate": 0.1194,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.1187,
+              "observed_rate": 0.1485,
+              "count": 377
+            },
+            {
+              "mean_predicted": 0.1327,
+              "observed_rate": 0.1376,
+              "count": 378
+            },
+            {
+              "mean_predicted": 0.1693,
+              "observed_rate": 0.1349,
+              "count": 378
+            }
+          ]
+        },
+        "persistence": {
+          "precision": 0.1003,
+          "recall": 0.1003,
+          "f1": 0.1003,
+          "tp": 34,
+          "fp": 305,
+          "fn": 305
+        }
+      }
+    }
+  }
+}

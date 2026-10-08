@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% block title %}Risk Dashboard | GDELT Conflict Forecasting{% endblock %}
+{% block content %}
+<h1>Country risk dashboard</h1>
+<p class="subtitle">Probability of a spike in material conflict events, 1 to 4 weeks ahead,
+  scored by a Gradient-Boosted Trees model on GDELT 2.0 country-week aggregates.</p>
+
+<div class="runbar">
+  <div class="runbar-text">
+    <span id="run-summary">
+      {% if last_full_run %}
+        Last full run {{ last_full_run }}.
+        {% if needs_refresh %}New data may be available.{% else %}Up to date for today.{% endif %}
+      {% else %}
+        No full pipeline run recorded yet.
+      {% endif %}
+    </span>
+  </div>
+  <div class="runbar-actions">
+    <button class="action" id="console-toggle" aria-expanded="false">Show console</button>
+    <button class="action primary" id="refresh-btn">Refresh data and retrain</button>
+  </div>
+</div>
+
+<section class="card console" id="console" hidden>
+  <div class="console-head">
+    <span class="console-title">Pipeline console</span>
+    <div class="stage-chips" id="stage-chips">
+      {% for s in stages %}<span class="chip" data-stage="{{ s }}">{{ s }}</span>{% endfor %}
+    </div>
+    <span class="console-meta" id="console-meta"></span>
+  </div>
+  <div class="console-body" id="console-body">
+    <div class="cline"><span class="cm" style="color: var(--muted)">Console is idle. Click Refresh to rebuild the dataset, retrain the models, and re-score every country.</span></div>
+  </div>
+  <div class="console-foot">
+    Read-only view of the same pipeline the CLI runs. Each stage calls the identical
+    <code>src/</code> function behind <code>python cli.py download|features|train|predict</code>.
+  </div>
+</section>
+
+{% if rows %}
+<div class="tiles">
+  <div class="tile">
+    <div class="label">Scores as of week</div>
+    <div class="value">{{ as_of }}</div>
+    <div class="hint">latest fully aggregated week</div>
+  </div>
+  <div class="tile">
+    <div class="label">Countries tracked</div>
+    <div class="value">{{ rows | length }}</div>
+    <div class="hint">above the news-volume floor</div>
+  </div>
+  <div class="tile">
+    <div class="label">Spiking this week</div>
+    <div class="value">{{ rows | selectattr("is_spike", "eq", 1) | list | length }}</div>
+    <div class="hint">at or above 2x trailing baseline</div>
+  </div>
+  <div class="tile">
+    <div class="label">Highest risk</div>
+    <div class="value">{{ rows[0]["country_name"] }}</div>
+    <div class="hint">max probability {{ "%.2f" | format(rows[0]["max_risk"]) }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="controls">
+    <h2 style="margin:0; flex:1;">Risk scores by country</h2>
+    <input type="search" id="filter" placeholder="Filter countries..." aria-label="Filter countries">
+  </div>
+  <div class="table-scroll">
+  <table id="risk-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Country</th>
+        <th class="num">Conflict events</th>
+        <th class="num">8-week baseline</th>
+        <th>Status</th>
+        {% for lead in leads %}<th class="num">P(spike) +{{ lead }}w</th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr data-name="{{ (r['country_name'] ~ ' ' ~ r['country']) | lower }}">
+        <td class="num">{{ loop.index }}</td>
+        <td><a href="/country/{{ r['country'] }}">{{ r["country_name"] }}</a>
+            <span class="mono" style="color: var(--muted)">{{ r["country"] }}</span></td>
+        <td class="num">{{ r["quad4_material_conflict"] | int }}</td>
+        <td class="num">{{ "%.1f" | format(r["quad4_mean8"]) }}</td>
+        <td>{% if r["is_spike"] == 1 %}<span class="spike-flag">spiking now</span>{% endif %}</td>
+        {% for lead in leads %}
+        {% set p = r["prob_lead" ~ lead] %}
+        <td class="num">
+          <span class="prob">{{ "%.2f" | format(p) }}
+            <span class="bar" style="width: {{ (p * 100) | round(0) }}%"></span>
+          </span>
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="note">Probabilities are the model's chance that the country's material conflict
+    event count in the target week is at least twice its trailing 8-week average (minimum 8
+    events). Click a country for its history and test-period predictions.</p>
+</div>
+{% else %}
+<div class="empty">
+  <p><b>No risk scores yet.</b> Click <b>Refresh data and retrain</b> above to build
+     everything, or run <code>python cli.py all</code> from a terminal.</p>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Run an individual stage</h2>
+  <p class="note" style="margin: 0 0 10px">Refresh above runs the whole chain. These
+    buttons run one stage at a time, for when only part of the pipeline needs rebuilding.</p>
+  <div class="controls">
+    <button class="action" data-stage="features">Build features</button>
+    <button class="action" data-stage="train">Train and evaluate</button>
+    <button class="action" data-stage="predict">Score latest week</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const filter = document.getElementById("filter");
+  if (filter) {
+    filter.addEventListener("input", () => {
+      const q = filter.value.toLowerCase();
+      document.querySelectorAll("#risk-table tbody tr").forEach((tr) => {
+        tr.style.display = tr.dataset.name.includes(q) ? "" : "none";
+      });
+    });
+  }
+
+  const consoleEl = document.getElementById("console");
+  const bodyEl = document.getElementById("console-body");
+  const metaEl = document.getElementById("console-meta");
+  const summaryEl = document.getElementById("run-summary");
+  const toggleBtn = document.getElementById("console-toggle");
+  const refreshBtn = document.getElementById("refresh-btn");
+  const stageBtns = document.querySelectorAll("button[data-stage]");
+
+  let cursor = 0;
+  let polling = null;
+  let firstPaint = true;
+
+  function showConsole(show) {
+    consoleEl.hidden = !show;
+    toggleBtn.textContent = show ? "Hide console" : "Show console";
+    toggleBtn.setAttribute("aria-expanded", String(show));
+  }
+  toggleBtn.addEventListener("click", () => showConsole(consoleEl.hidden));
+
+  function appendLines(lines) {
+    if (!lines.length) return;
+    if (firstPaint) { bodyEl.innerHTML = ""; firstPaint = false; }
+    const atBottom = bodyEl.scrollHeight - bodyEl.scrollTop - bodyEl.clientHeight < 40;
+    const frag = document.createDocumentFragment();
+    lines.forEach((ln) => {
+      const row = document.createElement("div");
+      row.className = "cline " + (ln.level || "info");
+      const t = document.createElement("span");
+      t.className = "ct"; t.textContent = ln.time;
+      const s = document.createElement("span");
+      s.className = "cs"; s.textContent = ln.stage || "";
+      const m = document.createElement("span");
+      m.className = "cm"; m.textContent = ln.text;
+      row.append(t, s, m);
+      frag.appendChild(row);
+    });
+    bodyEl.appendChild(frag);
+    if (atBottom) bodyEl.scrollTop = bodyEl.scrollHeight;
+  }
+
+  function paintChips(status) {
+    document.querySelectorAll("#stage-chips .chip").forEach((chip) => {
+      chip.dataset.state = status[chip.dataset.stage] || "pending";
+    });
+  }
+
+  function fmtElapsed(sec) {
+    if (sec == null) return "";
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return m ? `${m}m ${s}s` : `${s}s`;
+  }
+
+  async function poll() {
+    let s;
+    try {
+      const res = await fetch("/api/status?since=" + cursor);
+      s = await res.json();
+    } catch (e) { return; }
+
+    cursor = s.cursor;
+    appendLines(s.lines);
+    paintChips(s.stage_status || {});
+    metaEl.textContent = s.running
+      ? `${s.stage || "working"} - ${fmtElapsed(s.elapsed)}`
+      : (s.elapsed != null ? `finished in ${fmtElapsed(s.elapsed)}` : "idle");
+
+    const busy = s.running;
+    refreshBtn.disabled = busy;
+    stageBtns.forEach((b) => (b.disabled = busy));
+    refreshBtn.textContent = busy ? "Running..." : "Refresh data and retrain";
+
+    if (!busy && polling) {
+      clearInterval(polling); polling = null;
+      if (s.error) {
+        summaryEl.innerHTML = '<span class="error-text">Run failed. See the console for details.</span>';
+      } else {
+        summaryEl.textContent = "Run complete. Reloading with the new numbers...";
+        setTimeout(() => location.reload(), 1200);
+      }
+    }
+  }
+
+  function startPolling() {
+    if (!polling) polling = setInterval(poll, 1000);
+    poll();
+  }
+
+  refreshBtn.addEventListener("click", async () => {
+    refreshBtn.disabled = true;
+    showConsole(true);
+    const res = await fetch("/api/refresh", { method: "POST" });
+    const data = await res.json();
+    if (data.skipped) {
+      summaryEl.textContent = "Already refreshed today. Use the stage buttons below to force a rebuild.";
+      refreshBtn.disabled = false;
+      return;
+    }
+    firstPaint = true;
+    startPolling();
+  });
+
+  stageBtns.forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      showConsole(true);
+      await fetch("/api/run/" + btn.dataset.stage, { method: "POST" });
+      firstPaint = true;
+      startPolling();
+    });
+  });
+
+  // On load, render the previous run's console (it is kept on disk) and
+  // attach to a run that is already in flight.
+  fetch("/api/status?since=0").then((r) => r.json()).then((s) => {
+    cursor = s.cursor;
+    appendLines(s.lines);
+    paintChips(s.stage_status || {});
+    if (s.running) {
+      showConsole(true);
+      startPolling();
+    } else if (s.finished_at) {
+      metaEl.textContent = "last run finished " + s.finished_at.replace("T", " ");
+    } else {
+      metaEl.textContent = "idle";
+    }
+  });
+</script>
+{% endblock %}
